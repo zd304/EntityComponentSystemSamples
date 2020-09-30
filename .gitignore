@@ -60,3 +60,5 @@ artifacts
 .Editor
 .UnityLauncher.Editor
 
+/ECSSamples/Assets/SceneDependencyCache
+/ECSSamples/Assets/SceneDependencyCache.meta
