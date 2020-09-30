@@ -25,14 +25,17 @@ namespace Samples.Boids
         EntityQuery  m_TargetQuery;
         EntityQuery  m_ObstacleQuery;
 
-        // In this sample there are 3 total unique boid variants, one for each unique value of the 
-        // Boid SharedComponent (note: this includes the default uninitialized value at
-        // index 0, which isnt actually used in the sample).
+        // 在这个示例中，总共有3个特有的boid变体，每个boid SharedComponent的特有
+        // 值对应其中一个（注意：这包括索引为0处未初始化的默认值，该值在示例中没有实际使用）。
         List<Boid>   m_UniqueTypes = new List<Boid>(3);
 
+        // 累加每个Cell里的Boids的“positions”（separations）和“headings”（alignements）来：
         // This accumulates the `positions` (separations) and `headings` (alignments) of all the boids in each cell to:
+        // 1) 计算每个Cell中的boid数量
         // 1) count the number of boids in each cell
+        // 2) 找到每个boid Cell里最近的障碍和目标
         // 2) find the nearest obstacle and target to each boid cell
+        // 3) 
         // 3) track which array entry contains the accumulated values for each boid's cell
         // In this context, the cell represents the hashed bucket of boids that are near one another within cellRadius 
         // floored to the nearest int3.
