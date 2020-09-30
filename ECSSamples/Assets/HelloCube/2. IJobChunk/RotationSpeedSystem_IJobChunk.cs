@@ -5,9 +5,9 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-// This system updates all entities in the scene with both a RotationSpeed_IJobChunk and Rotation component.
-
-// ReSharper disable once InconsistentNaming
+/// <summary>
+/// 这里利用了Jobs和Burst编译器，它们和ECS共同组成DOTS，使代码运行更加高效
+/// </summary>
 public class RotationSpeedSystem_IJobChunk : SystemBase
 {
     EntityQuery m_Group;
@@ -18,7 +18,7 @@ public class RotationSpeedSystem_IJobChunk : SystemBase
         m_Group = GetEntityQuery(typeof(Rotation), ComponentType.ReadOnly<RotationSpeed_IJobChunk>());
     }
 
-    // Use the [BurstCompile] attribute to compile a job with Burst. You may see significant speed ups, so try it!
+    // //使用这个Attribute来利用Burst编译器，需要在Unity编辑器菜单栏Jobs > Burst > Enable Compilition来激活编译器
     [BurstCompile]
     struct RotationSpeedJob : IJobChunk
     {
@@ -45,15 +45,17 @@ public class RotationSpeedSystem_IJobChunk : SystemBase
         }
     }
 
-    // OnUpdate runs on the main thread.
+    // OnUpdate跑在主线程上，并将Job任务加入到计划中
     protected override void OnUpdate()
     {
+        // IJobChunk需要根据Archetype来找到Entity对应的IComponentData，来进行计算
         // Explicitly declare:
         // - Read-Write access to Rotation
         // - Read-Only access to RotationSpeed_IJobChunk
         var rotationType = GetArchetypeChunkComponentType<Rotation>();
         var rotationSpeedType = GetArchetypeChunkComponentType<RotationSpeed_IJobChunk>(true);
 
+        // 创建IJobChunk任务并加入到计划中
         var job = new RotationSpeedJob()
         {
             RotationType = rotationType,
