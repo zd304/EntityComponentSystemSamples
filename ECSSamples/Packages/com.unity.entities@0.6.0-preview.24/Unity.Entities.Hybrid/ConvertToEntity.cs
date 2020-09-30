@@ -33,6 +33,7 @@ namespace Unity.Entities
             if (World.DefaultGameObjectInjectionWorld != null)
             {
                 var system = World.DefaultGameObjectInjectionWorld.GetOrCreateSystem<ConvertToEntitySystem>();
+                // step 1: 将当前GameObject加入到ConvertToEntitySystem的m_ToBeConverted里，等待转换为Entity
                 system.AddToBeConverted(World.DefaultGameObjectInjectionWorld, this);
             }
             else
@@ -78,6 +79,7 @@ namespace Unity.Entities
 
         public void AddToBeConverted(World world, ConvertToEntity convertToEntity)
         {
+            // step 2: 根据不同的world，将ConvertToEntity分配到不同组里
             if (!m_ToBeConverted.TryGetValue(world, out var list))
             {
                 list = new List<ConvertToEntity>();
@@ -116,12 +118,14 @@ namespace Unity.Entities
 
         static void InjectOriginalComponents(GameObjectConversionMappingSystem mappingSystem, Transform transform)
         {
+            // step 6-1: 根据GameObject，分配一个Entity（其实就是个索引）
             var entity = mappingSystem.GetPrimaryEntity(transform.gameObject);
             foreach (var com in transform.GetComponents<Component>())
             {
                 if (com is GameObjectEntity || com is ConvertToEntity || com is ComponentDataProxyBase || com is StopConvertToEntity)
                     continue;
-
+                // step 6-2: 将所有组件附加到Entity上
+                // 注意：这里之所以可以将UnityEngine.Component当做ComponentData，请参看[GenerateAuthoringComponent]这个Attribute的功能
                 mappingSystem.DstEntityManager.AddComponentObject(entity, com);
             }
         }
@@ -135,6 +139,7 @@ namespace Unity.Entities
             {
                 var toBeInjected = new List<Transform>();
 
+                // step 3: 遍历所有m_ToBeConverted，即等待转换为Entity的GameObject
                 foreach (var convertToWorld in m_ToBeConverted)
                 {
                     var toBeConverted = convertToWorld.Value;
@@ -147,6 +152,7 @@ namespace Unity.Entities
 
                     using (var gameObjectWorld = settings.CreateConversionWorld())
                     {
+                        // step 4: 删除所有父节点带有ConvertToEntity脚本和StopConvertToEntity脚本的节点
                         toBeConverted.RemoveAll(convert =>
                         {
                             if (convert.GetComponent<StopConvertToEntity>() != null)
@@ -169,6 +175,7 @@ namespace Unity.Entities
                             return remove;
                         });
 
+                        // step 5: 遍历访问所有子节点，并将它们纳入m_ToBeConverted
                         foreach (var convert in toBeConverted)
                             AddRecurse(gameObjectWorld.EntityManager, convert.transform, toBeDetached, toBeInjected);
 
@@ -182,7 +189,10 @@ namespace Unity.Entities
 
                         var mappingSystem = gameObjectWorld.GetExistingSystem<GameObjectConversionMappingSystem>();
                         foreach (var convert in toBeInjected)
+                        {
+                            // step 6: 将GameObject转换成Entity
                             InjectOriginalComponents(mappingSystem, convert);
+                        }
                     }
 
                     toBeInjected.Clear();
