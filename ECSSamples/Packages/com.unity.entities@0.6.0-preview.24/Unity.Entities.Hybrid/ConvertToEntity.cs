@@ -125,7 +125,7 @@ namespace Unity.Entities
                 if (com is GameObjectEntity || com is ConvertToEntity || com is ComponentDataProxyBase || com is StopConvertToEntity)
                     continue;
                 // step 6-2: 将所有组件附加到Entity上
-                // 注意：这里之所以可以将UnityEngine.Component当做ComponentData，请参看[GenerateAuthoringComponent]这个Attribute的功能
+                // 注意：这里之所以可以将UnityEngine.Component当做IComponentData，请参看[GenerateAuthoringComponent]这个Attribute的功能
                 mappingSystem.DstEntityManager.AddComponentObject(entity, com);
             }
         }
